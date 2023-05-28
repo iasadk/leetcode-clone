@@ -16,6 +16,7 @@ export default function RootLayout({
     <RecoilRoot>
       <html lang="en">
         <head>
+          <title>Leetcode | clone</title>
           <link rel="shortcut icon" href="/favicon.png" type="image/x-icon" />
         </head>
         <body>{children}</body>

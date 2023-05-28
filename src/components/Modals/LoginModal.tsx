@@ -1,20 +1,72 @@
 import { ModalTypes, authModalState } from "@/atoms/authModalAtom";
-import React from "react";
+import { auth } from "@/firebase/firebase";
+import { makeToast } from "@/utils/toast";
+import React, { useEffect, useState } from "react";
+import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
+import { Toaster, toast } from "react-hot-toast";
 import { useSetRecoilState } from "recoil";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 
 const LoginModal = (props: Props) => {
   const setAuthModalState = useSetRecoilState(authModalState);
+  const [inputs, setInputs] = useState({
+    email: "",
+    password: "",
+  });
+  const router = useRouter();
+
+  const [signInWithEmailAndPassword, user, loading, error] =
+    useSignInWithEmailAndPassword(auth);
   const handleResetPassModal = () => {
     setAuthModalState((prev) => ({ ...prev, type: ModalTypes.ForgotPass }));
   };
   const handleRegisterModal = () => {
     setAuthModalState((prev) => ({ ...prev, type: ModalTypes.Register }));
   };
-  
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputs((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!inputs.email || !inputs.password) {
+      makeToast("All fields are required", "error");
+      return;
+    } else {
+      try {
+        toast.promise(
+          signInWithEmailAndPassword(inputs.email, inputs.password),
+          {
+            loading: "Verifying...",
+            success: (data) => {
+              console.log(data);
+              if (data === undefined) throw new Error(`Verification Failed.`);
+              router.push("/")
+              return <b>Authorized.</b>;
+            },
+            error: <b>Verification Failed.</b>,
+          }
+        );
+      } catch (error: any) {
+        makeToast(error.message, "error", "650px");
+      }
+    }
+  };
+  useEffect(() => {
+    if (error) {
+      console.log(error.code);
+      if (error.code === "auth/user-not-found") {
+        makeToast("User Not found", "error");
+      } else {
+        makeToast(error.code, "error");
+      }
+    }
+  }, [error]);
   return (
-    <form className="space-y-6 px-6 pb-4">
+    <form className="space-y-6 px-6 pb-4" onSubmit={(e) => handleSubmit(e)}>
       <h3 className="text-xl font-medium text-white">Sign in to LeetClone</h3>
       <div>
         <label
@@ -24,6 +76,7 @@ const LoginModal = (props: Props) => {
           Your Email
         </label>
         <input
+          onChange={(e) => handleInputChange(e)}
           type="email"
           name="email"
           id="email"
@@ -42,6 +95,7 @@ const LoginModal = (props: Props) => {
           Your Password
         </label>
         <input
+          onChange={(e) => handleInputChange(e)}
           type="password"
           name="password"
           id="password"
@@ -70,11 +124,12 @@ const LoginModal = (props: Props) => {
           Forgot Password?
         </span>
       </button>
-      <div className="text-sm font-medium text-gray-900 cursor-pointer" onClick={handleRegisterModal}>
+      <div
+        className="text-sm font-medium text-gray-900 cursor-pointer"
+        onClick={handleRegisterModal}
+      >
         Not Registered?{" "}
-        <span className="text-blue-700 hover:underline">
-          Create account
-        </span>
+        <span className="text-blue-700 hover:underline">Create account</span>
       </div>
     </form>
   );
