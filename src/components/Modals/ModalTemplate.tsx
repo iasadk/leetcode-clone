@@ -24,7 +24,6 @@ const ModalTemplate = (props: Props) => {
         onClick={handleCloseModal}
       >
       <Toaster />
-
       </div>
       <div className="w-full sm:w-[450px]  absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]  flex justify-center items-center">
         <div className="relative w-full h-full mx-auto flex items-center justify-center">
