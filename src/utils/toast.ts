@@ -16,9 +16,10 @@ const makeToast = (msg: String, type: String, width = "250px") => {
       });
   }
 };
-const makeToastIcon = (msg: String, icon:any) => {
+const makeToastIcon = (msg: String, icon:any,duration:Number = 1200) => {
   toast(msg, {
     icon: icon,
+    duration
   });
 };
 

@@ -19,13 +19,13 @@ const AuthPage = (props: Props) => {
   const [user, loading, error] = useAuthState(auth);
   const [pageLoading, setPageLoading] = useState(true);
   const path = usePathname();
-  // const router = useRouter();
+  const router = useRouter();
 
   useEffect(() => {
     if (user) {
-      makeToastIcon("Already Logged In.", '🧐');
+      // makeToastIcon("Already Logged In.", '🧐');
       // TODO: TRY TO FIX THIS ISSUE OF TOAST NOT SHOWING BECAUSE OF REDIRECTING.
-      // router.push("/");
+      router.push("/");
 
     }
     if (!loading && !user) setPageLoading(false);
