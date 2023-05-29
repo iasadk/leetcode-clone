@@ -6,17 +6,22 @@ import React from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Logout from "./Buttons/Logout";
 import { Toaster } from "react-hot-toast";
+import {FaChevronLeft,FaChevronRight} from "react-icons/fa"
+import {BsList} from "react-icons/bs"
+import Timer from "./Timer";
 
-type Props = {};
+type Props = {
+  problemPage?: Boolean;
+};
 
-const MainTopBar = (props: Props) => {
+const MainTopBar = ({ problemPage }: Props) => {
   const [user, loading] = useAuthState(auth);
   console.log(loading);
   return (
     <nav className="relative flex h-[50px] w-full shrink-0 items-center px-5 bg-dark-layer-1 text-dark-gray-7">
-      <Toaster/>
+      <Toaster />
       <div
-        className={`flex w-full items-center justify-between max-w-[1200px] mx-auto`}
+        className={`flex w-full items-center justify-between ${!problemPage ? "max-w-[1200px] mx-auto" : ""}`}
       >
         <Link href="/" className=" flex-1">
           <Image
@@ -28,6 +33,31 @@ const MainTopBar = (props: Props) => {
           />
         </Link>
 
+        {problemPage && (
+          <div className="flex items-center gap-4 flex-1 justify-center">
+            <div
+              className="flex items-center justify-center rounded bg-dark-fill-3 hover:bg-dark-fill-2 h-8 w-8 cursor-pointer"
+              // onClick={() => handleProblemChange(false)}
+            >
+              <FaChevronLeft />
+            </div>
+            <Link
+              href="/"
+              className="flex items-center gap-2 font-medium max-w-[170px] text-dark-gray-8 cursor-pointer"
+            >
+              <div>
+                <BsList />
+              </div>
+              <p>Problem List</p>
+            </Link>
+            <div
+              className="flex items-center justify-center rounded bg-dark-fill-3 hover:bg-dark-fill-2 h-8 w-8 cursor-pointer"
+              // onClick={() => handleProblemChange(true)}
+            >
+              <FaChevronRight />
+            </div>
+          </div>
+        )}
         <div className="flex items-center space-x-4 flex-1 justify-end">
           <div>
             <a
@@ -48,7 +78,11 @@ const MainTopBar = (props: Props) => {
           ) : (
             <div className="cursor-pointer group relative">
               <Image
-                src={user.email==="iasad0017@gmail.com" ? "/avatar.jpg" : "/avatar.png"}
+                src={
+                  user.email === "iasad0017@gmail.com"
+                    ? "/avatar.jpg"
+                    : "/avatar.png"
+                }
                 alt="Avatar"
                 width={30}
                 height={30}
@@ -63,7 +97,9 @@ const MainTopBar = (props: Props) => {
               </div>
             </div>
           )}
-          {user && <Logout/>}
+					{user && problemPage && <Timer />}
+          {user && problemPage && <Logout x_distance={"-translate-x-[40px]"}/>}
+          {user && !problemPage && <Logout/>}
         </div>
       </div>
     </nav>
