@@ -1,4 +1,5 @@
 import { Problem } from "@/utils/types/problem";
+import Image from "next/image";
 import { AiFillLike, AiFillDislike } from "react-icons/ai";
 import { BsCheck2Circle } from "react-icons/bs";
 import { TiStarOutline } from "react-icons/ti";
@@ -65,11 +66,12 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem }) => {
               {problem.examples.map((v,i) => (
                 <div key={v.id}>
                   <p className="font-medium text-white ">Example {i+1}: </p>
+                  {v.img && <Image src={v.img} alt={`visualization-${problem.id}`} height={500} width={500}/>}
                   <div className="example-card">
                     <pre>
                       <strong className="text-white">Input: </strong> {v.inputText}<br />
                       <strong>Output:</strong> {v.outputText} <br />
-                      <strong>Explanation:</strong>{v.explanation}
+                      {v.explanation && <><strong>Explanation:</strong>{v.explanation}</>}
                     </pre>
                   </div>
                 </div>
