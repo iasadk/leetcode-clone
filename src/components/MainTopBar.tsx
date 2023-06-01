@@ -16,7 +16,6 @@ type Props = {
 
 const MainTopBar = ({ problemPage }: Props) => {
   const [user, loading] = useAuthState(auth);
-  console.log(loading);
   return (
     <nav className="relative flex h-[50px] w-full shrink-0 items-center px-5 bg-dark-layer-1 text-dark-gray-7">
       <Toaster />
