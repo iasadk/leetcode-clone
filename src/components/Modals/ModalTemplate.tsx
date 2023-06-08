@@ -7,9 +7,6 @@ import ResetPassModal from "./ResetPassModal";
 import { ModalTypes, authModalState } from "@/atoms/authModalAtom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { Toaster } from "react-hot-toast";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase/firebase";
-import { usePathname,useRouter } from "next/navigation";
 type Props = {};
 
 const ModalTemplate = (props: Props) => {

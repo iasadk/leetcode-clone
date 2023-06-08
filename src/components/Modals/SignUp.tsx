@@ -1,11 +1,12 @@
 import { ModalTypes, authModalState } from "@/atoms/authModalAtom";
-import { auth } from "@/firebase/firebase";
-import React, { useEffect, useState} from "react";
+import { auth, firestore } from "@/firebase/firebase";
+import React, { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import toast from "react-hot-toast";
 import { makeToast } from "@/utils/toast";
-import { useRouter } from "next/navigation";
+import { UserCredential } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 type Props = {};
 
 const SignUp = (props: Props) => {
@@ -25,29 +26,45 @@ const SignUp = (props: Props) => {
     setAuthModalState((prev) => ({ ...prev, type: ModalTypes.Login }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!inputs.displayName || !inputs.email || !inputs.password) {
       makeToast("All fields are required", "error");
       return;
     } else {
       try {
+        let newUser: UserCredential | undefined | any = undefined;
         toast.promise(
           createUserWithEmailAndPassword(inputs.email, inputs.password),
           {
             loading: "Registering..",
-            success: (data) => {
-              if (data === undefined) throw new Error(`Registration Failed.`);
+            success: async (user) => {
+              if (!user) throw new Error(`Registration Failed.`);
+              newUser = user;
+              if (!newUser) return;
+              const userData = {
+                uid: newUser.user.uid,
+                email: newUser.user.email,
+                displayName: inputs.displayName,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                likedProblems: [],
+                dislikedProblems: [],
+                solvedProblems: [],
+                starredProblems: [],
+              };
+              await setDoc(doc(firestore, "users", newUser.user.uid), userData);
               setInputs({
                 email: "",
                 displayName: "",
                 password: "",
-              })
+              });
               return <b>Registration Completed.</b>;
             },
             error: <b>Registration Failed.</b>,
           }
         );
+        console.log("user: ", newUser);
       } catch (error: any) {
         makeToast(error.message, "error", "650px");
       }

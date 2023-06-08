@@ -1,23 +1,28 @@
 "use client";
-import { problems } from "@/mock/mockProblems";
+import { firestore } from "@/firebase/firebase";
+import { DBProblem } from "@/utils/types/problem";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { AiFillYoutube } from "react-icons/ai";
 import { BsCheckCircle } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
 import YouTube from "react-youtube";
-type Props = {};
+type Props = {
+  setLoadingProblems : React.Dispatch<React.SetStateAction<boolean>>
+};
 
-function ProblemsTable({}: Props) {
+function ProblemsTable({setLoadingProblems}: Props) {
   const [youtubeState, setYoutubeState] = useState({
     isOpen: false,
     videoId: "",
   });
-
+	const problems = useGetProblems(setLoadingProblems);
   const closeModal = () => {
     setYoutubeState((prev) => ({ videoId: "", isOpen: false }));
   };
   useEffect(() => {
+    // For YoutubePlayer : 
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeModal();
     };
@@ -101,3 +106,29 @@ function ProblemsTable({}: Props) {
 }
 
 export default ProblemsTable;
+
+function useGetProblems(setLoadingProblems: React.Dispatch<React.SetStateAction<boolean>>) {
+	const [problems, setProblems] = useState<DBProblem[]>([]);
+
+	useEffect(() => {
+		const getProblems = async () => {
+			// fetching data logic
+			setLoadingProblems(true);
+			try {
+        const q = query(collection(firestore, "problems"), orderBy("order", "asc"));
+			const querySnapshot = await getDocs(q);
+			const tmp: DBProblem[] = [];
+			querySnapshot.forEach((doc : any) => {
+				tmp.push({ id: doc.id, ...doc.data() } as DBProblem);
+			});
+      setProblems(tmp);
+      } catch (error) {
+        console.log(error)
+      }
+			setLoadingProblems(false);
+		};
+
+		getProblems();
+	}, [setLoadingProblems]);
+	return problems;
+}

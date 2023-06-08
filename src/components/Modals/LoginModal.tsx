@@ -42,9 +42,8 @@ const LoginModal = (props: Props) => {
           {
             loading: "Verifying...",
             success: (data) => {
-              console.log(data);
-              if (data === undefined) throw new Error(`Verification Failed.`);
-              router.push("/")
+              if (!data) throw new Error(`Verification Failed.`);
+              router.push("/");
               return <b>Authorized.</b>;
             },
             error: <b>Verification Failed.</b>,
