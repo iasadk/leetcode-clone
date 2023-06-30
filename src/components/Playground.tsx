@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import PreferenceNav from "./PreferenceNav";
 import Split from "react-split";
 import CodeMirror from "@uiw/react-codemirror";
@@ -6,15 +6,88 @@ import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { javascript } from "@codemirror/lang-javascript";
 import EditorFooter from "./EditorFooter";
 import { Problem } from "@/utils/types/problem";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, firestore } from "@/firebase/firebase";
+import { useParams, useRouter } from "next/navigation";
+import { makeToast } from "@/utils/toast";
+import { problems } from "@/utils/problems";
+import { arrayUnion, doc, updateDoc } from "firebase/firestore";
 type Props = {
   problem: Problem;
+  setSuccess:React.Dispatch<React.SetStateAction<boolean>>,
+  setSolved:React.Dispatch<React.SetStateAction<boolean>>,
 };
+export interface ISettings {
+	fontSize: string;
+	settingsModalIsOpen: boolean;
+	dropdownIsOpen: boolean;
+}
+const Playground = ({problem,setSuccess,setSolved}: Props) => {
+  const [activeTestCaseId, setActiveTestCaseId] = useState(0);
+  let [userCode, setUserCode] = useState(problem.starterCode);
+  const [user] = useAuthState(auth);
+	// const [fontSize, setFontSize] = useLocalStorage("lcc-fontSize", "16px");
+	const [settings, setSettings] = useState<ISettings>({
+		fontSize: "16px",
+		settingsModalIsOpen: false,
+		dropdownIsOpen: false,
+	});
+  const {pid} = useParams();
+  const handleSubmit = async () => {
+		if (!user) {
+			makeToast("Please login to submit your code","success");
+			return;
+		}
+		try {
+			userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
+			const cb = new Function(`return ${userCode}`)();
+			const handler = problems[pid as string].handlerFunction;
 
-const Playground = ({problem}: Props) => {
-  const [activeTestCaseId, setActiveTestCaseId] = useState(0)
+			if (typeof handler === "function") {
+				const success = handler(cb);
+				if (success) {
+					makeToast("Congrats! All tests passed!","success");
+					setSuccess(true);
+					setTimeout(() => {
+						setSuccess(false);
+					}, 4000);
+
+					const userRef = doc(firestore, "users", user.uid);
+					await updateDoc(userRef, {
+						solvedProblems: arrayUnion(pid),
+					});
+					setSolved(true);
+				}
+			}
+		} catch (error: any) {
+			console.log(error.message);
+			if (
+				error.message.startsWith("AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:")
+			) {
+				makeToast("Oops! One or more test cases failed","error");
+			} else {
+				makeToast(error.message,"error");
+			}
+		}
+	};
+
+  
+	useEffect(() => {
+		const code = localStorage.getItem(`code-${pid}`);
+		if (user) {
+			setUserCode(code ? JSON.parse(code) : problem.starterCode);
+		} else {
+			setUserCode(problem.starterCode);
+		}
+	}, [pid, user, problem.starterCode]);
+  const onChange = (value: string)=>{
+    setUserCode(value);
+    localStorage.setItem(`code-${pid}`, JSON.stringify(value));
+
+  }
   return (
     <div className="flex flex-col bg-dark-layer-1 relative overflow-x-hidden">
-      <PreferenceNav />
+      <PreferenceNav settings={settings} setSettings={setSettings}/>
       <Split
         className="h-[calc(100vh-94px)]"
         direction="vertical"
@@ -25,10 +98,10 @@ const Playground = ({problem}: Props) => {
           <div className="h-full">
             <CodeMirror
               theme={vscodeDark}
-              // onChange={onChange}
-              value={problem.starterCode}
+              onChange={onChange}
+              value={userCode}
               extensions={[javascript()]}
-              // style={{ fontSize: settings.fontSize }}
+              style={{ fontSize: settings.fontSize }}
             />
           </div>
         </div>
@@ -74,7 +147,7 @@ const Playground = ({problem}: Props) => {
           </div>
         </div>
       </Split>
-      <EditorFooter />
+      <EditorFooter handleSubmit={handleSubmit}/>
     </div>
   );
 };

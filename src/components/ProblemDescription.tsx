@@ -1,6 +1,5 @@
 "use client";
 import RectangleSkeleton from "@/components/Skeletons/RectangleSkeleton";
-
 import { DBProblem, Problem } from "@/utils/types/problem";
 import Image from "next/image";
 import { AiFillLike, AiFillDislike, AiOutlineLoading3Quarters, AiFillStar } from "react-icons/ai";
@@ -11,12 +10,14 @@ import { arrayRemove, arrayUnion, doc, getDoc, runTransaction, updateDoc } from 
 import { auth, firestore } from "@/firebase/firebase";
 import CircleSkeleton from "./Skeletons/CircleSkeleton";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { makeToast, makeToastIcon } from "@/utils/toast";
+import { makeToastIcon } from "@/utils/toast";
 type ProblemDescriptionProps = {
-  problem: Problem;
+  problem: Problem,
+  _solved: boolean
+
 };
 
-const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem }) => {
+const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem,_solved }) => {
   const [user] = useAuthState(auth);
   const { currentProblem, loading, problemDifficultyClass, setCurrentProblem } =
     useGetCurrentProblem(problem.id);
@@ -207,7 +208,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem }) => {
                 >
                   {currentProblem.difficulty}
                 </div>
-                {solved && (
+                {(solved || _solved) && (
 									<div className='rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-green-s text-dark-green-s'>
 										<BsCheck2Circle />
 									</div>
