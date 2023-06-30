@@ -1,9 +1,10 @@
 "use client";
-import { firestore } from "@/firebase/firebase";
+import { auth, firestore } from "@/firebase/firebase";
 import { DBProblem } from "@/utils/types/problem";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, orderBy, query } from "firebase/firestore";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
 import { AiFillYoutube } from "react-icons/ai";
 import { BsCheckCircle } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
@@ -18,6 +19,8 @@ function ProblemsTable({setLoadingProblems}: Props) {
     videoId: "",
   });
 	const problems = useGetProblems(setLoadingProblems);
+  const solvedProblems = useGetSolvedProblems();
+  console.log(problems)
   const closeModal = () => {
     setYoutubeState((prev) => ({ videoId: "", isOpen: false }));
   };
@@ -46,7 +49,8 @@ function ProblemsTable({setLoadingProblems}: Props) {
               key={problem.id}
             >
               <th className="px-2 py-4 font-medium whitespace-nowrap text-dark-green-s">
-                <BsCheckCircle fontSize={"18"} width="18" />
+                
+                {solvedProblems.includes(problem.id) && <BsCheckCircle fontSize={"18"} width="18" />}
               </th>
               <td className="px-6 py-4">
                 <Link
@@ -131,4 +135,27 @@ function useGetProblems(setLoadingProblems: React.Dispatch<React.SetStateAction<
 		getProblems();
 	}, [setLoadingProblems]);
 	return problems;
+}
+function useGetSolvedProblems() {
+	const [solvedProblems, setSolvedProblems] = useState<string[]>([]);
+  const [user] = useAuthState(auth)
+	useEffect(() => {
+		const getProblems = async () => {
+			// fetching data logic
+			try {
+        const docRef = doc(firestore, "users", user!.uid);
+        const docSnap = await getDoc(docRef);
+        if(docSnap.exists()){
+          setSolvedProblems(docSnap.data()!.solvedProblems);
+        }
+      }
+      catch(e){
+        alert("Error While fetching solved Problems!!");
+      }
+      
+		};
+    if(user) getProblems();
+    if(!user) setSolvedProblems([]);
+	}, [user]);
+	return solvedProblems;
 }

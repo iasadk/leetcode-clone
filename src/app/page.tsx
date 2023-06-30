@@ -108,7 +108,7 @@ export default function Home() {
           </thead>
           <ProblemsTable setLoadingProblems={setLoadingProblems} />
         </table>
-        {loadingProblems && (
+        {loadingProblems && isOnline && (
           <div className="max-w-[1200px] mx-auto sm:w-7/12 w-full animate-pulse">
             {[...Array(10)].map((_, idx) => (
               <LoadingSkeleton key={idx} />
